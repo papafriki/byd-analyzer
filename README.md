@@ -29,17 +29,17 @@ Analizador de consumo energético para BYD ATTO con sistema completo de backup/r
 ```bash
 git clone https://github.com/papafriki/byd-analyzer.git
 cd byd-analyzer
-
+```
 2. **Crear archivo de configuración:**
 ```bash
 cp .env.example .env
 # Edita .env si necesitas cambiar puerto o zona horaria
-
+```
 
 3. **Construir e iniciar con Docker:**
 ```bash
 docker-compose up -d
-
+```
 4. **Acceder a la aplicación:**
 Abre tu navegador en: http://localhost:5005
 
@@ -57,6 +57,7 @@ byd-analyzer/
 ├── .env.example        # Configuración de ejemplo
 ├── .gitignore         # Archivos ignorados por Git
 └── README.md          # Esta documentación
+```
 
 ## 🖥️ Uso básico
 
