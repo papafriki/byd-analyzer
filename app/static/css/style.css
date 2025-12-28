@@ -1,0 +1,610 @@
+/* ============================================
+   VARIABLES CSS
+   ============================================ */
+:root {
+    --primary-color: #1e3c72;
+    --secondary-color: #2a5298;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+    --gray-color: #6c757d;
+    --light-gray: #e9ecef;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --radius: 8px;
+    --transition: all 0.3s ease;
+}
+
+/* ============================================
+   ESTILOS GENERALES
+   ============================================ */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+    min-height: 100vh;
+    padding-bottom: 2rem;
+    color: var(--dark-color);
+}
+
+.container {
+    max-width: 1400px;
+}
+
+/* ============================================
+   NAVBAR PERSONALIZADA
+   ============================================ */
+.navbar-custom {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    width: 100%;
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.navbar-brand i {
+    font-size: 1.8rem;
+    margin-right: 8px;
+    color: #fff;
+}
+
+.nav-link {
+    font-weight: 500;
+    padding: 8px 16px !important;
+    margin: 0 4px;
+    border-radius: 4px;
+    transition: var(--transition);
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+}
+
+.nav-link.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    font-weight: 600;
+}
+
+/* ============================================
+   TARJETAS DE ESTADÍSTICAS
+   ============================================ */
+.stat-card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    height: 100%;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    color: white;
+    font-size: 1.8rem;
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: var(--gray-color);
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ============================================
+   TARJETAS DE CONTENIDO
+   ============================================ */
+.card {
+    border: none;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 1.5rem;
+    transition: var(--transition);
+    overflow: hidden;
+}
+
+.card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border: none;
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.card-header i {
+    margin-right: 8px;
+    font-size: 1.2rem;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* ============================================
+   GRÁFICOS
+   ============================================ */
+.chart-container {
+    height: 320px;
+    width: 100%;
+    position: relative;
+}
+
+/* ============================================
+   TABLA DE VIAJES
+   ============================================ */
+.table-responsive {
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table thead th {
+    background-color: var(--light-gray);
+    border-bottom: 2px solid var(--primary-color);
+    font-weight: 600;
+    color: var(--primary-color);
+    padding: 1rem;
+    white-space: nowrap;
+}
+
+.table tbody td {
+    padding: 1rem;
+    vertical-align: middle;
+    border-color: #f1f1f1;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(30, 60, 114, 0.03);
+}
+
+.trip-row {
+    transition: var(--transition);
+}
+
+.trip-row:hover {
+    background-color: #f8fafc;
+    transform: scale(1.002);
+}
+
+/* Badges de eficiencia */
+.badge.efficiency-excellent {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.badge.efficiency-good {
+    background: linear-gradient(135deg, #ffc107, #fd7e14);
+    color: white;
+}
+
+.badge.efficiency-poor {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+}
+
+/* ============================================
+   ÁREA DE SUBIDA
+   ============================================ */
+.upload-area {
+    border: 3px dashed var(--light-gray);
+    border-radius: var(--radius);
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    background-color: #fdfdfe;
+}
+
+.upload-area:hover {
+    border-color: var(--primary-color);
+    background-color: rgba(30, 60, 114, 0.02);
+}
+
+.upload-area.dragover {
+    border-color: var(--primary-color);
+    background-color: rgba(30, 60, 114, 0.05);
+    transform: scale(1.02);
+}
+
+.upload-area h4 {
+    color: var(--primary-color);
+    margin: 1rem 0 0.5rem;
+}
+
+.upload-area p.text-muted {
+    font-size: 0.95rem;
+}
+
+.upload-area code {
+    background-color: rgba(30, 60, 114, 0.1);
+    color: var(--primary-color);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+#fileInput {
+    display: none;
+}
+
+/* Progress bar */
+.progress {
+    height: 10px;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+}
+
+/* ============================================
+   BOTONES
+   ============================================ */
+.btn-byd {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border: none;
+    color: white;
+    font-weight: 500;
+    padding: 8px 20px;
+    border-radius: 6px;
+    transition: var(--transition);
+}
+
+.btn-byd:hover {
+    background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(30, 60, 114, 0.3);
+}
+
+.btn-byd:active {
+    transform: translateY(0);
+}
+
+.btn-outline-primary {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+/* ============================================
+   BOTONES DATATABLES
+   ============================================ */
+.dt-buttons .dt-button,
+.dt-buttons button.buttons-copy,
+.dt-buttons button.buttons-print,
+.dt-buttons .btn {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+    border-color: var(--primary-color) !important;
+    color: white !important;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+    padding: 8px 16px !important;
+    border-radius: 4px !important;
+    font-weight: 500 !important;
+    transition: all 0.3s ease !important;
+}
+
+.dt-buttons .dt-button:hover,
+.dt-buttons button.buttons-copy:hover,
+.dt-buttons button.buttons-print:hover,
+.dt-buttons .btn:hover {
+    background: linear-gradient(135deg, var(--secondary-color), var(--primary-color)) !important;
+    border-color: var(--secondary-color) !important;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(30, 60, 114, 0.3) !important;
+}
+
+.dt-buttons .btn i,
+.dt-buttons .dt-button i {
+    color: white !important;
+}
+
+/* ============================================
+   CONTROLES DE PAGINACIÓN
+   ============================================ */
+.page-size-controls {
+    background-color: var(--light-gray);
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    color: var(--gray-color);
+}
+
+#filterInfo {
+    font-style: italic;
+    color: var(--primary-color);
+}
+
+/* ============================================
+   LISTAS Y ALERTAS
+   ============================================ */
+.list-group-item {
+    border: none;
+    padding: 0.75rem 1rem;
+    background-color: transparent;
+}
+
+.list-group-item i {
+    color: var(--primary-color);
+}
+
+.alert {
+    border: none;
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+}
+
+.alert-info {
+    background-color: rgba(30, 60, 114, 0.08);
+    border-left: 4px solid var(--primary-color);
+    color: var(--dark-color);
+}
+
+.alert-success {
+    background-color: rgba(40, 167, 69, 0.1);
+    border-left: 4px solid var(--success-color);
+}
+
+.alert-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    border-left: 4px solid var(--warning-color);
+}
+
+.alert-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-left: 4px solid var(--danger-color);
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--light-gray);
+    color: var(--gray-color);
+}
+
+footer p {
+    margin-bottom: 0.5rem;
+}
+
+/* ============================================
+   MODAL
+   ============================================ */
+.modal-content {
+    border: none;
+    border-radius: var(--radius);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border: none;
+    border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.modal-title {
+    font-weight: 600;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+    .stat-value {
+        font-size: 2rem;
+    }
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+    }
+    
+    .chart-container {
+        height: 280px;
+    }
+    
+    .table thead th,
+    .table tbody td {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+    
+    .upload-area {
+        padding: 2rem 1rem;
+    }
+    
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+    
+    .nav-link {
+        padding: 6px 12px !important;
+        margin: 2px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .stat-card {
+        padding: 1rem;
+    }
+    
+    .stat-value {
+        font-size: 1.8rem;
+    }
+    
+    .card-header {
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+}
+
+/* ============================================
+   ANIMACIONES Y EFECTOS ESPECIALES
+   ============================================ */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.stat-card, .card, .upload-area {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Spinner personalizado */
+.spinner-border.text-primary {
+    color: var(--primary-color) !important;
+}
+
+/* ============================================
+   UTILIDADES
+   ============================================ */
+.text-byd {
+    color: var(--primary-color) !important;
+}
+
+.bg-byd {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+}
+
+.border-byd {
+    border-color: var(--primary-color) !important;
+}
+
+/* Scroll personalizado */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--light-gray);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+}
+
+/* ============================================
+   ESTILOS PARA SISTEMA DE BACKUP
+   ============================================ */
+
+.backup-upload-area {
+    border: 2px dashed var(--primary-color);
+    background-color: rgba(30, 60, 114, 0.03);
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: var(--transition);
+    border-radius: var(--radius);
+}
+
+.backup-upload-area:hover {
+    background-color: rgba(30, 60, 114, 0.08);
+    border-color: var(--secondary-color);
+}
+
+/* Tarjetas de backup */
+.card .card-header.bg-success {
+    background: linear-gradient(135deg, #28a745, #20c997) !important;
+}
+
+.card .card-header.bg-primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+}
+
+/* Información de backup */
+#backupPreview .alert-info {
+    background-color: rgba(30, 60, 114, 0.08);
+    border-left: 4px solid var(--primary-color);
+    text-align: left;
+}
+
+/* Botones de backup */
+#exportBtn, #importBtn {
+    padding: 10px 20px;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+#exportBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+#importBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(30, 60, 114, 0.3);
+}
+
+/* Responsive para backup */
+@media (max-width: 768px) {
+    .backup-upload-area {
+        padding: 1rem;
+    }
+    
+    #exportBtn, #importBtn {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+}

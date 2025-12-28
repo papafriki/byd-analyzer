@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BYD Energy Analyzer</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Plotly para gráficos -->
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+    <!-- DataTables -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Nuestros estilos -->
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-car-front-fill"></i> <strong>BYD Energy Analyzer</strong>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#dashboard">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#trips">
+                            <i class="bi bi-car-front-fill"></i> Viajes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#consumption">
+                            <i class="bi bi-lightning-charge"></i> Consumo
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#upload">
+                            <i class="bi bi-upload"></i> Subir Datos
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Dashboard Stats -->
+        <div id="dashboard">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h2 class="mb-4">
+                        <i class="bi bi-speedometer2"></i> Dashboard BYD ATTO
+                    </h2>
+                </div>
+            </div>
+            
+            <div class="row" id="statsRow">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="bi bi-car-front"></i>
+                        </div>
+                        <div class="stat-value" id="statTrips">0</div>
+                        <div class="stat-label">Total Viajes</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="bi bi-signpost"></i>
+                        </div>
+                        <div class="stat-value" id="statDistance">0</div>
+                        <div class="stat-label">Km Recorridos</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="bi bi-lightning"></i>
+                        </div>
+                        <div class="stat-value" id="statConsumption">0</div>
+                        <div class="stat-label">kWh Consumidos</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="bi bi-graph-up"></i>
+                        </div>
+                        <div class="stat-value" id="statEfficiency">0.0</div>
+                        <div class="stat-label">km/kWh Promedio</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Gráficos principales -->
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="bi bi-bar-chart"></i> Consumo Mensual
+                        </div>
+                        <div class="card-body">
+                            <div id="monthlyChart" class="chart-container"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="bi bi-pie-chart"></i> Distribución por Distancia
+                        </div>
+                        <div class="card-body">
+                            <div id="distanceChart" class="chart-container"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección Viajes -->
+        <div id="trips" class="mt-5">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-journey"></i> Historial de Viajes
+                        <span class="badge bg-primary ms-2" id="tripsCount">0 viajes</span>
+                    </h5>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-primary" onclick="changePageSize(10)">10</button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="changePageSize(25)">25</button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="changePageSize(50)">50</button>
+                        <button class="btn btn-sm btn-byd" onclick="changePageSize(-1)">Todos</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="page-size-controls mb-3">
+                        <span class="me-2">Mostrando:</span>
+                        <span id="currentRange">0-0</span> de <span id="totalCount">0</span> viajes
+                        <span class="ms-3" id="filterInfo"></span>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="tripsTable">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Hora Inicio</th>
+                                    <th>Hora Fin</th>
+                                    <th>Distancia (km)</th>
+                                    <th>Consumo (kWh)</th>
+                                    <th>Eficiencia</th>
+                                    <th>Vel. Media</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tripsBody">
+                                <!-- Los viajes se cargan aquí -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección Consumo -->
+        <div id="consumption" class="mt-5">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-lightning-charge"></i> Análisis de Consumo
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">Eficiencia por Tipo de Viaje</div>
+                                <div class="card-body">
+                                    <div id="efficiencyChart" class="chart-container"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">Consumo por Hora del Día</div>
+                                <div class="card-body">
+                                    <div id="hourlyChart" class="chart-container"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">Estadísticas Detalladas</div>
+                                <div class="card-body">
+                                    <div class="row" id="detailedStats">
+                                        <!-- Estadísticas se cargan aquí -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección Subida de Datos -->
+        <!-- Sección Subida de Datos y Backup -->
+        <div id="upload" class="mt-5">
+            <!-- Tarjeta para subir datos del BYD (EXISTENTE) -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-upload"></i> Subir Datos del BYD
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="upload-area" id="dropArea">
+                                <i class="bi bi-cloud-upload" style="font-size: 4rem; color: var(--primary-color);"></i>
+                                <h4 class="mt-3">Arrastra tu archivo aquí</h4>
+                                <p class="text-muted">O haz clic para seleccionar</p>
+                                <p class="small text-muted">
+                                    Busca el archivo <code>EC_database.db</code> en tu BYD ATTO
+                                </p>
+                                <input type="file" id="fileInput" accept=".db">
+                            </div>
+                            <div class="progress mt-3 d-none" id="uploadProgress">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     style="width: 0%"></div>
+                            </div>
+                            <div id="uploadResult" class="mt-3"></div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <i class="bi bi-info-circle"></i> Instrucciones
+                                </div>
+                                <div class="card-body">
+                                    <h6>¿Dónde encontrar los datos?</h6>
+                                    <ol class="small">
+                                        <li>Conecta un usb a tu BYD ATTO</li>
+                                        <li>Accede a la carpeta energydata</li>
+                                        <li>Copia el archivo <code>EC_database.db</code> al usb</li>
+                                        <li>Conecta el usb al pc y cargalo en esta página</li>
+                                    </ol>
+                                    
+                                    <h6 class="mt-3">Estado de la Base de Datos</h6>
+                                    <div class="list-group list-group-flush" id="uploadedFiles">
+                                        <div class="list-group-item">
+                                            <i class="bi bi-database me-2"></i>
+                                            <strong id="dbTripCount">0</strong> viajes en total
+                                        </div>
+                                        <div class="list-group-item">
+                                            <i class="bi bi-file-earmark-binary me-2"></i>
+                                            <strong id="dbFileCount">0</strong> archivos procesados
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="alert alert-info mt-3">
+                                        <i class="bi bi-shield-check"></i>
+                                        <strong>Seguro:</strong> Los datos se procesan localmente y no se envían a servidores externos.
+                                    </div>
+                                    
+                                    <button class="btn btn-outline-secondary btn-sm w-100" onclick="checkDatabaseStatus()">
+                                        <i class="bi bi-arrow-clockwise"></i> Actualizar estado
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- NUEVA: Tarjeta para Sistema de Backup -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-database-check"></i> Sistema de Copia de Seguridad
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header bg-success text-white">
+                                    <i class="bi bi-download"></i> Exportar Backup
+                                </div>
+                                <div class="card-body text-center">
+                                    <i class="bi bi-file-earmark-zip" style="font-size: 3rem; color: var(--success-color);"></i>
+                                    <h5 class="mt-3">Crear Copia de Seguridad</h5>
+                                    <p class="text-muted small">
+                                        Genera un archivo .backup con todos tus viajes y datos. 
+                                        Ideal para migrar o guardar como respaldo.
+                                    </p>
+                                    
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between small text-muted mb-1">
+                                            <span>Viajes actuales:</span>
+                                            <span id="currentTripCount">0</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between small text-muted mb-1">
+                                            <span>Archivos procesados:</span>
+                                            <span id="currentFileCount">0</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between small text-muted">
+                                            <span>Tamaño aproximado:</span>
+                                            <span id="currentDbSize">0 MB</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <button class="btn btn-success w-100" onclick="exportBackup()" id="exportBtn">
+                                        <i class="bi bi-download"></i> Exportar Backup
+                                    </button>
+                                    <p class="small text-muted mt-2">
+                                        <i class="bi bi-info-circle"></i> Se descargará un archivo .backup
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header bg-primary text-white">
+                                    <i class="bi bi-upload"></i> Importar Backup
+                                </div>
+                                <div class="card-body text-center">
+                                    <i class="bi bi-file-earmark-arrow-up" style="font-size: 3rem; color: var(--primary-color);"></i>
+                                    <h5 class="mt-3">Restaurar Datos</h5>
+                                    <p class="text-muted small">
+                                        Sube un archivo .backup para restaurar todos los datos. 
+                                        <strong class="text-danger">¡Reemplazará los datos actuales!</strong>
+                                    </p>
+                                    
+								<div class="upload-area backup-upload-area" id="backupUploadArea">
+									<i class="bi bi-cloud-arrow-up" style="font-size: 2.5rem; color: var(--primary-color);"></i>
+									<p class="mt-2 mb-1">Arrastra archivo .backup aquí</p>
+									<p class="small text-muted">o haz clic para seleccionar</p>
+									<input type="file" id="backupFileInput" accept=".backup" style="display: none;">
+								</div>
+                                    
+                                    <div id="backupPreview" class="mt-3 d-none">
+                                        <div class="alert alert-info">
+                                            <h6><i class="bi bi-file-earmark-check"></i> Información del Backup</h6>
+                                            <div class="small">
+                                                <div><strong>Viajes:</strong> <span id="backupTripCount">0</span></div>
+                                                <div><strong>Archivos:</strong> <span id="backupFileCount">0</span></div>
+                                                <div><strong>Creado:</strong> <span id="backupCreatedAt">N/A</span></div>
+                                                <div><strong>Versión:</strong> <span id="backupVersion">N/A</span></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <button class="btn btn-primary w-100 mt-3 d-none" onclick="importBackup()" id="importBtn">
+                                        <i class="bi bi-upload"></i> Restaurar Backup
+                                    </button>
+                                    <div id="backupResult" class="mt-3"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Información del sistema -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <i class="bi bi-gear"></i> Información del Sistema
+                                </div>
+                                <div class="card-body">
+                                    <div class="row text-center">
+                                        <div class="col-md-3">
+                                            <div class="small text-muted">Versión App</div>
+                                            <div class="h5">3.1</div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="small text-muted">Backup Soporte</div>
+                                            <div class="h5 text-success"><i class="bi bi-check-circle"></i> Activo</div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="small text-muted">Formato Backup</div>
+                                            <div class="h6"><code>.backup</code></div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="small text-muted">Modo Seguro</div>
+                                            <div class="h5 text-success"><i class="bi bi-shield-check"></i> Local</div>
+                                        </div>
+                                    </div>
+                                    <div class="alert alert-warning mt-3 small">
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        <strong>Importante:</strong> Los backups se procesan localmente. 
+                                        Se recomienda guardar copias en un lugar seguro. 
+                                        La restauración reemplazará todos los datos actuales.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="text-center">
+            <p>BYD Energy Analyzer v3.1 | Desarrollado para BYD ATTO | Los datos se almacenan localmente</p>
+            <p class="small text-muted">
+                <i class="bi bi-cpu"></i> Servidor Flask | 
+                <i class="bi bi-database"></i> SQLite | 
+                <i class="bi bi-graph-up"></i> Plotly
+            </p>
+        </footer>
+    </div>
+
+    <!-- Modal para detalles del viaje -->
+    <div class="modal fade" id="tripModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalles del Viaje</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="tripDetails">
+                    Cargando detalles...
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/script.js?v=20251223001"></script><!-- Nuestro script principal -->
+</body>
+</html>

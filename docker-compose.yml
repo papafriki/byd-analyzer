@@ -1,0 +1,26 @@
+services:
+  byd-analyzer:
+    build: .
+    container_name: byd-energy-analyzer
+    ports:
+      - "${PORT:-5005}:5000"
+    environment:
+      - TZ=${TZ:-Europe/Madrid}
+      - FLASK_ENV=production
+    volumes:
+      - ./data:/app/data:rw
+      - ./uploads:/app/subir_fichero:rw
+      - ./app/templates:/app/templates
+      - ./app/static:/app/static
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
