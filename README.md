@@ -1,10 +1,28 @@
-# ⚡ BYD Energy Analyzer v3.1
+# ⚡ BYD Energy Analyzer v1.0
 
 [![Docker](https://img.shields.io/badge/Docker-✓-blue)](https://www.docker.com/)
 [![Python](https://img.shields.io/badge/Python-3.9+-green)](https://python.org)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
 Analizador de consumo energético para BYD ATTO con sistema completo de backup/restauración. Procesa datos del vehículo localmente, garantizando privacidad total.
+
+## 📸 Capturas de pantalla
+
+| Dashboard principal | Historial de viajes |
+|---------------------|---------------------|
+| ![Dashboard](./screenshots/Dashboard.png) | ![Viajes](./screenshots/Historial_Viajes.png) |
+
+| Consumo mensual| Subida de datos |
+|---------------------|-----------------|
+| ![Consumo mensual](./screenshots/Consumo_Mensual.png) | ![Subida](./screenshots/Subir_Datos.png) |
+
+| Análisis de consumo | Estadísticas detalladas |
+|---------------------|-----------------|
+| ![Consumo mensual](./screenshots/Consumo_Mensual.png) | ![Subida](./screenshots/Estadisticas_Detalladas.png) |
+
+| Copia de seguridad | Información sistema |
+|---------------------|-----------------|
+| ![Consumo mensual](./screenshots/Copia_Seguridad.png) | ![Subida](./screenshots/Informacion_Sistema.png) |
 
 ## ✨ Características
 
