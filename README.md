@@ -27,8 +27,8 @@ Analizador de consumo energético para BYD ATTO con sistema completo de backup/r
 
 1. **Clonar el repositorio:**
 ```bash
-git clone https://github.com/papafriki/byd-energy-analyzer.git
-cd byd-energy-analyzer
+git clone https://github.com/papafriki/byd-analyzer.git
+cd byd-analyzer
 
 2. **Crear archivo de configuración:**
 ```bash
@@ -46,7 +46,7 @@ Abre tu navegador en: http://localhost:5005
 
 ### Estructura del proyecto
 ```bash
-byd-energy-analyzer/
+byd-analyzer/
 ├── app/                    # Código Flask
 │   ├── static/            # CSS, JS, fuentes
 │   ├── templates/         # HTML templates
