@@ -35,12 +35,17 @@ cd byd-analyzer
 cp .env.example .env
 # Edita .env si necesitas cambiar puerto o zona horaria
 ```
-
-3. **Construir e iniciar con Docker:**
+3. **Crear los directorios data y uploads con tu usuario para evitar problemas con los permisos:**
+```bash
+mkdir -p data uploads
+chown -R $(id -u):$(id -g) data uploads
+chmod 755 data uploads
+```
+4. **Construir e iniciar con Docker:**
 ```bash
 docker-compose up -d
 ```
-4. **Acceder a la aplicación:**
+5. **Acceder a la aplicación:**
 Abre tu navegador en: http://localhost:5005
 
 
