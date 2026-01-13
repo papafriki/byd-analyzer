@@ -177,7 +177,7 @@ def process_database_file(filepath, filename):
                 trips_skipped += 1
                 
         except Exception as e:
-            print(f"⚠️ Error insertando viaje: {e}")
+            print(f"⚠Error insertando viaje: {e}")
             trips_skipped += 1
             continue
     
@@ -193,7 +193,7 @@ def process_database_file(filepath, filename):
         SET trips_added = trips_added + ?, upload_date = CURRENT_TIMESTAMP
         WHERE file_hash = ?
         ''', (trips_added, file_hash))
-        print(f"📝 Archivo actualizado: {filename} (+{trips_added} viajes)")
+        print(f"📝Archivo actualizado: {filename} (+{trips_added} viajes)")
     
     conn_hist.commit()
     conn_byd.close()
@@ -203,7 +203,7 @@ def process_database_file(filepath, filename):
     
     return {
         "status": "success" if trips_added > 0 else "skipped",
-        "message": f"Archivo procesado: {trips_added} viajes nuevos añadidos" if trips_added > 0 else "No se añadieron viajes nuevos (todos ya existían)",
+        "message": f"Archivo procesado: {trips_added} viajes nuevos añadidos" if trips_added > 0 else "No se aÑadieron viajes nuevos (todos ya existían)",
         "trips_added": trips_added,
         "trips_skipped": trips_skipped,
         "total_in_file": len(df),
@@ -323,6 +323,99 @@ def get_consumption_stats():
         ]
     }
 
+def get_energy_costs():
+    """Calcula costes y emisiones comparativas"""
+    conn = sqlite3.connect('data/historical.db')
+    cursor = conn.cursor()
+    
+    # Obtener datos totales
+    cursor.execute('''
+    SELECT 
+        COALESCE(SUM(trip), 0) as total_distance,
+        COALESCE(SUM(electricity), 0) as total_consumption
+    FROM trips
+    ''')
+    
+    totals = cursor.fetchone()
+    total_distance = totals[0] or 0
+    total_consumption = totals[1] or 0
+    
+    conn.close()
+    
+    # Obtener variables de entorno con valores por defecto
+    electricity_price = float(os.getenv('ELECTRICITY_PRICE', 0.15))
+    gasoline_price = float(os.getenv('GASOLINE_PRICE', 1.50))
+    diesel_price = float(os.getenv('DIESEL_PRICE', 1.40))
+    gasoline_consumption = float(os.getenv('GASOLINE_CONSUMPTION', 7.0))
+    diesel_consumption = float(os.getenv('DIESEL_CONSUMPTION', 5.5))
+    co2_gasoline = float(os.getenv('CO2_GASOLINE', 120))
+    co2_diesel = float(os.getenv('CO2_DIESEL', 95))
+    
+    # Cálculos
+    # Coste eléctrico
+    electric_cost = total_consumption * electricity_price
+    
+    # Coste gasolina
+    gasoline_liters = total_distance * (gasoline_consumption / 100)
+    gasoline_cost = gasoline_liters * gasoline_price
+    
+    # Coste diésel
+    diesel_liters = total_distance * (diesel_consumption / 100)
+    diesel_cost = diesel_liters * diesel_price
+    
+    # Emisiones (en kg, dividiendo entre 1000)
+    electric_emissions = 0  # 0 porque depende del mix energético
+    gasoline_emissions = (total_distance * co2_gasoline) / 1000
+    diesel_emissions = (total_distance * co2_diesel) / 1000
+    
+    # Ahorros
+    savings_vs_gasoline = gasoline_cost - electric_cost
+    savings_vs_diesel = diesel_cost - electric_cost
+    
+    # Porcentajes de ahorro
+    savings_pct_gasoline = (savings_vs_gasoline / gasoline_cost * 100) if gasoline_cost > 0 else 0
+    savings_pct_diesel = (savings_vs_diesel / diesel_cost * 100) if diesel_cost > 0 else 0
+    
+    return {
+        "totals": {
+            "distance_km": round(total_distance, 1),
+            "consumption_kwh": round(total_consumption, 1)
+        },
+        "prices": {
+            "electricity": electricity_price,
+            "gasoline": gasoline_price,
+            "diesel": diesel_price
+        },
+        "consumptions": {
+            "gasoline_l_100km": gasoline_consumption,
+            "diesel_l_100km": diesel_consumption
+        },
+        "emissions_factors": {
+            "gasoline_g_km": co2_gasoline,
+            "diesel_g_km": co2_diesel
+        },
+        "costs": {
+            "electric": round(electric_cost, 2),
+            "gasoline": round(gasoline_cost, 2),
+            "diesel": round(diesel_cost, 2)
+        },
+        "savings": {
+            "vs_gasoline": {
+                "amount": round(savings_vs_gasoline, 2),
+                "percentage": round(savings_pct_gasoline, 1)
+            },
+            "vs_diesel": {
+                "amount": round(savings_vs_diesel, 2),
+                "percentage": round(savings_pct_diesel, 1)
+            }
+        },
+        "emissions": {
+            "gasoline_kg": round(gasoline_emissions, 1),
+            "diesel_kg": round(diesel_emissions, 1),
+            "electric_kg": electric_emissions
+        }
+    }
+
 def get_db_status():
     """Obtiene el estado de la base de datos"""
     conn = sqlite3.connect('data/historical.db')
@@ -354,7 +447,7 @@ def get_db_status():
         "server_time": datetime.now().isoformat()
     }
 
-# ========== RUTAS DE LA APLICACIÓN ==========
+# ========== RUTAS DE LA APLICACIóN ==========
 
 @app.route('/')
 def index():
@@ -399,6 +492,144 @@ def api_consumption():
             },
             "by_distance": [],
             "monthly": []
+        }), 200
+
+@app.route('/api/energy_costs', methods=['GET', 'POST'])
+def api_energy_costs():
+    """API: Costes energéticos comparativos"""
+    try:
+        if request.method == 'POST':
+            # Obtener parámetros personalizados del POST
+            data = request.json or {}
+            
+            # Parámetros personalizados (si no vienen, usar valores por defecto del .env)
+            electricity_price = float(data.get('electricity_price', os.getenv('ELECTRICITY_PRICE', 0.15)))
+            gasoline_price = float(data.get('gasoline_price', os.getenv('GASOLINE_PRICE', 1.50)))
+            diesel_price = float(data.get('diesel_price', os.getenv('DIESEL_PRICE', 1.40)))
+            gasoline_consumption = float(data.get('gasoline_consumption', os.getenv('GASOLINE_CONSUMPTION', 7.0)))
+            diesel_consumption = float(data.get('diesel_consumption', os.getenv('DIESEL_CONSUMPTION', 5.5)))
+            co2_gasoline = float(data.get('co2_gasoline', os.getenv('CO2_GASOLINE', 120)))
+            co2_diesel = float(data.get('co2_diesel', os.getenv('CO2_DIESEL', 95)))
+            
+            # Obtener datos totales
+            conn = sqlite3.connect('data/historical.db')
+            cursor = conn.cursor()
+            
+            # Construir query con filtro de fechas si se proporciona
+            date_from = data.get('date_from')
+            date_to = data.get('date_to')
+            
+            if date_from and date_to:
+                # Filtrar por rango de fechas
+                query = '''
+                SELECT 
+                    COALESCE(SUM(trip), 0) as total_distance,
+                    COALESCE(SUM(electricity), 0) as total_consumption
+                FROM trips
+                WHERE date(start_datetime) BETWEEN ? AND ?
+                '''
+                cursor.execute(query, (date_from, date_to))
+            else:
+                # Todos los datos
+                cursor.execute('''
+                SELECT 
+                    COALESCE(SUM(trip), 0) as total_distance,
+                    COALESCE(SUM(electricity), 0) as total_consumption
+                FROM trips
+                ''')
+            
+            totals = cursor.fetchone()
+            total_distance = totals[0] or 0
+            total_consumption = totals[1] or 0
+            
+            conn.close()
+            
+            # Cálculos con parámetros personalizados
+            electric_cost = total_consumption * electricity_price
+            
+            gasoline_liters = total_distance * (gasoline_consumption / 100)
+            gasoline_cost = gasoline_liters * gasoline_price
+            
+            diesel_liters = total_distance * (diesel_consumption / 100)
+            diesel_cost = diesel_liters * diesel_price
+            
+            # Emisiones (en kg)
+            gasoline_emissions = (total_distance * co2_gasoline) / 1000
+            diesel_emissions = (total_distance * co2_diesel) / 1000
+            
+            # Ahorros
+            savings_vs_gasoline = gasoline_cost - electric_cost
+            savings_vs_diesel = diesel_cost - electric_cost
+            
+            savings_pct_gasoline = (savings_vs_gasoline / gasoline_cost * 100) if gasoline_cost > 0 else 0
+            savings_pct_diesel = (savings_vs_diesel / diesel_cost * 100) if diesel_cost > 0 else 0
+            
+            result = {
+                "totals": {
+                    "distance_km": round(total_distance, 1),
+                    "consumption_kwh": round(total_consumption, 1)
+                },
+                "prices": {
+                    "electricity": electricity_price,
+                    "gasoline": gasoline_price,
+                    "diesel": diesel_price
+                },
+                "consumptions": {
+                    "gasoline_l_100km": gasoline_consumption,
+                    "diesel_l_100km": diesel_consumption
+                },
+                "emissions_factors": {
+                    "gasoline_g_km": co2_gasoline,
+                    "diesel_g_km": co2_diesel
+                },
+                "costs": {
+                    "electric": round(electric_cost, 2),
+                    "gasoline": round(gasoline_cost, 2),
+                    "diesel": round(diesel_cost, 2)
+                },
+                "savings": {
+                    "vs_gasoline": {
+                        "amount": round(savings_vs_gasoline, 2),
+                        "percentage": round(savings_pct_gasoline, 1)
+                    },
+                    "vs_diesel": {
+                        "amount": round(savings_vs_diesel, 2),
+                        "percentage": round(savings_pct_diesel, 1)
+                    }
+                },
+                "emissions": {
+                    "gasoline_kg": round(gasoline_emissions, 1),
+                    "diesel_kg": round(diesel_emissions, 1),
+                    "electric_kg": 0
+                },
+                "custom_calculation": True
+            }
+            
+            return jsonify(result)
+        else:
+            # GET: usar valores por defecto del .env
+            result = get_energy_costs()
+            result["custom_calculation"] = False
+            return jsonify(result)
+            
+    except Exception as e:
+        print(f"❌ Error en /api/energy_costs: {e}")
+        return jsonify({
+            "error": str(e),
+            "costs": {
+                "electric": 0,
+                "gasoline": 0,
+                "diesel": 0
+            },
+            "savings": {
+                "vs_gasoline": {"amount": 0, "percentage": 0},
+                "vs_diesel": {"amount": 0, "percentage": 0}
+            },
+            "emissions": {
+                "gasoline_kg": 0,
+                "diesel_kg": 0,
+                "electric_kg": 0
+            }
         }), 200
 
 @app.route('/api/monthly')
@@ -477,7 +708,7 @@ def api_upload():
     
     try:
         file.save(filepath)
-        print(f"📤 Archivo guardado temporalmente: {filepath}")
+        print(f"📝¤ Archivo guardado temporalmente: {filepath}")
     except Exception as e:
         print(f"❌ Error guardando archivo: {e}")
         return jsonify({"error": f"Error guardando archivo: {str(e)}"}), 500
@@ -493,10 +724,10 @@ def api_upload():
             if result.get('file_was_new', True):
                 backup_path = os.path.join(backup_dir, filename)
                 shutil.copy2(filepath, backup_path)
-                print(f"📁 Archivo copiado a backup: {backup_path}")
+                print(f"📝 Archivo copiado a backup: {backup_path}")
             
             os.remove(filepath)
-            print(f"🗑️ Archivo temporal eliminado: {filepath}")
+            print(f"🗑 Archivo temporal eliminado: {filepath}")
         
         print(f"✅ Resultado final: {result}")
         return jsonify(result)
@@ -505,7 +736,7 @@ def api_upload():
         print(f"❌ Error procesando archivo: {e}")
         if os.path.exists(filepath):
             os.remove(filepath)
-            print(f"🗑️ Archivo temporal eliminado por error: {filepath}")
+            print(f"🗑 Archivo temporal eliminado por error: {filepath}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/health')
@@ -513,9 +744,9 @@ def api_health():
     """API: Estado del servicio"""
     return jsonify({
         "status": "healthy",
-        "service": "BYD Energy Analyzer",
+        "service": "BYD Analyzer",
         "timestamp": datetime.now().isoformat(),
-        "version": "3.1",
+        "version": "1.0",
         "database": os.path.exists('data/historical.db'),
         "upload_folder": os.path.exists('subir_fichero'),
         "timezone": "Europe/Madrid (automático)"
@@ -659,7 +890,7 @@ def restore_backup(backup_filepath):
         with open(manifest_path, 'r') as f:
             manifest = json.load(f)
         
-        print(f"📋 Backup encontrado:")
+        print(f"📝‹ Backup encontrado:")
         print(f"   - Versión: {manifest.get('version')}")
         print(f"   - Creado: {manifest.get('created_at')}")
         print(f"   - Viajes: {manifest.get('total_trips', 0)}")
@@ -867,11 +1098,11 @@ def api_system_status():
         print(f"❌ Error en /api/system/status: {e}")
         return jsonify({"error": str(e)}), 500
 
-# ========== INICIALIZACIÓN ==========
+# ========== INICIALIZACIóN ==========
 
 if __name__ == '__main__':
     print("=" * 50)
-    print("🚀 Iniciando BYD Energy Analyzer v3.1...")
+    print("🚀 Iniciando BYD Analyzer v1.0...")
     print("=" * 50)
     
     init_database()
@@ -881,9 +1112,9 @@ if __name__ == '__main__':
     print(f"   - data/: {os.path.exists('data')}")
     print(f"   - subir_fichero/: {os.path.exists('subir_fichero')}")
     print(f"   - templates/: {os.path.exists('templates')}")
-    print(f"🕐 Zona horaria configurada: Europe/Madrid (UTC+1/UTC+2 automático)")
+    print(f" Zona horaria configurada: Europe/Madrid (UTC+1/UTC+2 automático)")
     
-    print("\n📡 Endpoints disponibles:")
+    print("\n Endpoints disponibles:")
     print("   GET  /              → Interfaz web")
     print("   GET  /api/trips     → Lista de viajes")
     print("   GET  /api/consumption → Estadísticas")

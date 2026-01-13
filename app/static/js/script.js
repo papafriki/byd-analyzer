@@ -1,7 +1,15 @@
+// ============================================
+// BYD ANALYZER - SCRIPT COMPLETO
+// ============================================
+
 // Variables globales
 let dataTable = null;
 let isUploading = false;
 let allStats = null;
+let currentBackupFile = null;
+let backupFileInfo = null;
+let currentEnergyData = null; 
+let customCalculation = false;
 
 // Inicializar al cargar
 document.addEventListener('DOMContentLoaded', function() {
@@ -10,18 +18,15 @@ document.addEventListener('DOMContentLoaded', function() {
     checkDatabaseStatus();
 });
 
-function initializeApp() {
-	console.log('🚀 initializeApp() iniciando...'); // DEBUG
+function initializeApp() { 
     loadDashboardStats();
     loadTripsTable();
     setupUpload();
-    // INICIALIZAR SISTEMA DE BACKUP (NUEVO)
-	console.log('🔧 Llamando a initializeBackupSystem()...'); 
     initializeBackupSystem();
-    console.log('✅ initializeBackupSystem() llamado'); // DEBUG
+    initializeEnergyComparison();
+    
     // Actualizar cada 30 segundos
     setInterval(loadDashboardStats, 30000);
-	console.log('🏁 initializeApp() completado'); // DEBUG
 }
 
 function setupEventListeners() {
@@ -56,7 +61,7 @@ function updateActiveNavLink(sectionId) {
 }
 
 function updateActiveNavOnScroll() {
-    const sections = ['dashboard', 'trips', 'consumption', 'upload'];
+    const sections = ['dashboard', 'trips', 'consumption', 'upload', 'backup', 'comparison'];
     const scrollPosition = window.scrollY + 100;
     
     for (const sectionId of sections) {
@@ -103,7 +108,7 @@ async function loadDashboardStats() {
     }
 }
 
-// ===== VIAJES =====
+// ===== VIAJES (DataTable con botón personalizado de costes) =====
 async function loadTripsTable() {
     try {
         const response = await fetch('/api/trips?limit=10000&order=DESC');
@@ -176,32 +181,55 @@ async function loadTripsTable() {
             dataTable.destroy();
         }
         
-        // Inicializar DataTable
+        // INICIALIZAR DATATABLE CON BOTóN PERSONALIZADO DE COSTES
         dataTable = $('#tripsTable').DataTable({
             pageLength: 25,
             lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
             order: [[0, 'desc']],
             language: {
-                url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
-            },
+						"sProcessing": "Procesando...",
+						"sLengthMenu": "Mostrar _MENU_ registros",
+						"sZeroRecords": "No se encontraron resultados",
+						"sEmptyTable": "Ningún dato disponible en esta tabla",
+						"sInfo": "Mostrando _START_ a _END_ de _TOTAL_ registros",
+						"sInfoEmpty": "Mostrando 0 a 0 de 0 registros",
+						"sInfoFiltered": "(filtrado de _MAX_ registros totales)",
+						"sSearch": "Buscar:",
+						"oPaginate": {
+										"sFirst": "Primero",
+										"sLast": "Último",
+										"sNext": "Siguiente",
+										"sPrevious": "Anterior"
+									}
+					},
             dom: 'Bfrtip',
             buttons: [
                 {
                     extend: 'copy',
-                    text: '<i class="bi bi-clipboard"></i> Copiar',
-                    className: 'btn btn-sm'
+                    text: '<i class="bi bi-clipboard me-1"></i> Copiar',
+                    className: 'btn btn-byd'
                 },
                 {
                     extend: 'csv',
-                    text: '<i class="bi bi-file-earmark-spreadsheet"></i> CSV',
-                    className: 'btn btn-sm',
+                    text: '<i class="bi bi-file-earmark-spreadsheet me-1"></i> CSV',
+                    className: 'btn btn-byd',
                     title: 'byd_viajes_' + new Date().toISOString().split('T')[0]
                 },
                 {
+                    extend: 'excel',
+                    text: '<i class="bi bi-file-excel me-1"></i> Excel',
+                    className: 'btn btn-byd'
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="bi bi-file-pdf me-1"></i> PDF',
+                    className: 'btn btn-byd'
+                },
+                {
                     extend: 'print',
-                    text: '<i class="bi bi-printer"></i> Imprimir',
-                    className: 'btn btn-sm'
-                }
+                    text: '<i class="bi bi-printer me-1"></i> Imprimir',
+                    className: 'btn btn-byd'
+                },                
             ],
             initComplete: function() {
                 updatePageInfo();
@@ -227,7 +255,7 @@ function changePageSize(size) {
             dataTable.page.len(size).draw();
         }
         updatePageInfo();
-        showToast(`Mostrando ${size === -1 ? 'todos' : size} registros por página`, 'info');
+        //showToast(`Mostrando: ${size === -1 ? 'todos' : size} registros por página`, 'info');
     }
 }
 
@@ -579,16 +607,12 @@ function loadDetailedStats() {
 }
 
 // ===== SUBIDA DE ARCHIVOS =====
-// ===== SUBIDA DE ARCHIVOS =====
 function setupUpload() {
-    console.log('🔧 setupUpload() - Iniciando configuración de upload .db');
-    
     const dropArea = document.getElementById('dropArea');
     const fileInput = document.getElementById('fileInput');
     
     // VERIFICACIÓN CRÍTICA: Evitar que esta función interfiera con el área de backup
-    if (dropArea && (dropArea.id === 'backupUploadArea' || dropArea.classList.contains('backup-upload-area'))) {
-        console.log('⚠️ Se detectó área de backup, omitiendo configuración en setupUpload()');
+    if (dropArea && (dropArea.id === 'backupUploadArea' || dropArea.classList.contains('backup-upload-area'))) {        
         return; // Este es el área de backup, no lo manejamos aquí
     }
     
@@ -645,15 +669,12 @@ function setupUpload() {
     function handleDrop(e) {
         const dt = e.dataTransfer;
         const files = dt.files;
-        
-        console.log('📂 Drop de archivos:', files.length);
         if (files && files.length > 0) {
             handleFiles(files);
         }
     }
-    
-    console.log('✅ setupUpload() configurado correctamente para archivos .db');
 }
+
 function handleFiles(files) {
     if (!files || files.length === 0) return;
     
@@ -780,8 +801,6 @@ async function uploadFile(file) {
 
 async function reloadAllData() {
     try {
-        console.log("🔄 Recargando todos los datos...");
-        
         // 1. Mostrar indicador de carga en estadísticas
         const statCards = document.querySelectorAll('.stat-value');
         statCards.forEach(card => {
@@ -807,6 +826,7 @@ async function reloadAllData() {
         showToast("Error recargando datos", "error");
     }
 }
+
 function showUploadResult(message, type) {
     const resultDiv = document.getElementById('uploadResult');
     resultDiv.innerHTML = message;
@@ -825,47 +845,7 @@ async function checkDatabaseStatus() {
     }
 }
 
-// ===== FUNCIONES UTILITARIAS =====
-function formatDate(date) {
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-}
-
-function formatTime(date) {
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${hours}:${minutes}`;
-}
-
-function getEfficiencyClass(efficiency) {
-    if (!efficiency) return 'bg-secondary';
-    if (efficiency > 6) return 'efficiency-excellent';
-    if (efficiency > 5) return 'efficiency-good';
-    if (efficiency > 0) return 'efficiency-poor';
-    return 'bg-secondary';
-}
-
-function showToast(message, type = 'info') {
-    Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: type,
-        title: message,
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true
-    });
-}
-
-
 // ===== SISTEMA DE BACKUP =====
-
-let currentBackupFile = null;
-let backupFileInfo = null;
-
-// Actualizar información del sistema
 async function updateSystemInfo() {
     try {
         const response = await fetch('/api/system/status');
@@ -882,7 +862,6 @@ async function updateSystemInfo() {
     }
 }
 
-// Exportar backup
 async function exportBackup() {
     try {
         const exportBtn = document.getElementById('exportBtn');
@@ -939,7 +918,6 @@ async function exportBackup() {
     }
 }
 
-// Manejar selección de archivo de backup
 function setupBackupUpload() {
     const backupFileInput = document.getElementById('backupFileInput');
     const backupUploadArea = document.getElementById('backupUploadArea');
@@ -1013,7 +991,6 @@ function setupBackupUpload() {
     }, false);
 }
 
-// Procesar archivo de backup seleccionado
 async function handleBackupFile(file) {
     try {
         // Validar extensión
@@ -1092,7 +1069,6 @@ async function handleBackupFile(file) {
     }
 }
 
-// Importar backup
 async function importBackup() {
     try {
         if (!currentBackupFile) {
@@ -1189,15 +1165,9 @@ async function importBackup() {
     } catch (error) {
         console.error('Error importando backup:', error);
         showToast('Error restaurando backup: ' + error.message, 'error');
-        
-        // Restaurar botón
-        const importBtn = document.getElementById('importBtn');
-        importBtn.innerHTML = originalText;
-        importBtn.disabled = false;
     }
 }
 
-// Función auxiliar para formatear fecha de backup
 function formatBackupDate(dateString) {
     try {
         if (!dateString || dateString === 'N/A') return 'N/A';
@@ -1215,21 +1185,639 @@ function formatBackupDate(dateString) {
     }
 }
 
-// Inicializar sistema de backup
-
-function initializeBackupSystem() {
-    console.log('💾 initializeBackupSystem() iniciando...'); // DEBUG
-    
+function initializeBackupSystem() {   
     // Configurar upload de backup
-    console.log('   Configurando upload de backup...'); // DEBUG
     setupBackupUpload();
     
     // Actualizar información del sistema
-    console.log('   Actualizando info del sistema...'); // DEBUG
     updateSystemInfo();
     
     // Actualizar cada 2 minutos
     setInterval(updateSystemInfo, 120000);
-    
-    console.log('✅ initializeBackupSystem() completado'); // DEBUG
 }
+
+// ===== COMPARATIVA DE COSTES Y EMISIONES =====
+async function loadEnergyComparison() {
+    try {
+        const response = await fetch('/api/energy_costs');
+        currentEnergyData = await response.json();
+        customCalculation = currentEnergyData.custom_calculation || false;
+        updateEnergyComparisonUI();
+    } catch (error) {
+        console.error('Error cargando comparativa:', error);
+    }
+}
+
+function updateEnergyComparisonUI() {
+    if (!currentEnergyData) return;
+    
+    const d = currentEnergyData;
+    
+    // Costes
+    document.getElementById('costElectric').textContent = d.costs.electric.toFixed(2) + ' €';
+    document.getElementById('costElectricDetails').textContent = 
+        d.totals.consumption_kwh.toFixed(1) + ' kWh × ' + d.prices.electricity.toFixed(2) + ' €/kWh';
+    
+    document.getElementById('costGasoline').textContent = d.costs.gasoline.toFixed(2) + ' €';
+    document.getElementById('costGasolineDetails').textContent = 
+        d.totals.distance_km.toFixed(1) + ' km × ' + d.consumptions.gasoline_l_100km + ' L/100km';
+    
+    document.getElementById('costDiesel').textContent = d.costs.diesel.toFixed(2) + ' €';
+    document.getElementById('costDieselDetails').textContent = 
+        d.totals.distance_km.toFixed(1) + ' km × ' + d.consumptions.diesel_l_100km + ' L/100km';
+    
+    // Ahorros
+    document.getElementById('savingsGasolineAmount').textContent = d.savings.vs_gasoline.amount.toFixed(2) + ' €';
+    document.getElementById('savingsGasolinePct').textContent = d.savings.vs_gasoline.percentage.toFixed(1) + '%';
+    document.getElementById('savingsDieselAmount').textContent = d.savings.vs_diesel.amount.toFixed(2) + ' €';
+    document.getElementById('savingsDieselPct').textContent = d.savings.vs_diesel.percentage.toFixed(1) + '%';
+    
+    // Emisiones
+    document.getElementById('emissionsGasoline').textContent = d.emissions.gasoline_kg.toFixed(1) + ' kg';
+    document.getElementById('emissionsDiesel').textContent = d.emissions.diesel_kg.toFixed(1) + ' kg';
+    
+    // Configuración actual
+    document.getElementById('currentElectricityPrice').textContent = d.prices.electricity.toFixed(2);
+    document.getElementById('currentGasolinePrice').textContent = d.prices.gasoline.toFixed(2);
+    document.getElementById('currentDieselPrice').textContent = d.prices.diesel.toFixed(2);
+    document.getElementById('currentGasolineConsumption').textContent = d.consumptions.gasoline_l_100km;
+    document.getElementById('currentDieselConsumption').textContent = d.consumptions.diesel_l_100km;
+    document.getElementById('currentCo2Gasoline').textContent = d.emissions_factors.gasoline_g_km;
+    document.getElementById('currentCo2Diesel').textContent = d.emissions_factors.diesel_g_km;
+    document.getElementById('totalDistance').textContent = d.totals.distance_km.toFixed(1);
+    document.getElementById('totalConsumption').textContent = d.totals.consumption_kwh.toFixed(1);
+    
+    // Indicador de cálculo personalizado
+    const configAlert = document.querySelector('.alert.alert-info');
+    if (configAlert) {
+        if (customCalculation) {
+            configAlert.classList.remove('alert-info');
+            configAlert.classList.add('alert-warning');
+            configAlert.innerHTML = `
+                <i class="bi bi-exclamation-triangle"></i>
+                <strong>Cálculo personalizado activo</strong> - 
+                Usando valores personalizados. 
+                <button class="btn btn-sm btn-outline-secondary ms-2" onclick="resetToDefaults()">
+                    Volver a valores por defecto
+                </button>
+            `;
+        } else {
+            configAlert.classList.remove('alert-warning');
+            configAlert.classList.add('alert-info');
+            configAlert.innerHTML = `
+                <div class="row small">
+                    <div class="col-md-3">
+                        <strong>Precios actuales:</strong><br>
+                        Electricidad: <span id="currentElectricityPrice">${d.prices.electricity.toFixed(2)}</span> €/kWh<br>
+                        Gasolina: <span id="currentGasolinePrice">${d.prices.gasoline.toFixed(2)}</span> €/L<br>
+                        Diésel: <span id="currentDieselPrice">${d.prices.diesel.toFixed(2)}</span> €/L
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Consumos referencia:</strong><br>
+                        Gasolina: <span id="currentGasolineConsumption">${d.consumptions.gasoline_l_100km}</span> L/100km<br>
+                        Diésel: <span id="currentDieselConsumption">${d.consumptions.diesel_l_100km}</span> L/100km
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Emisiones referencia:</strong><br>
+                        Gasolina: <span id="currentCo2Gasoline">${d.emissions_factors.gasoline_g_km}</span> g/km<br>
+                        Diésel: <span id="currentCo2Diesel">${d.emissions_factors.diesel_g_km}</span> g/km
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Totales:</strong><br>
+                        Distancia: <span id="totalDistance">${d.totals.distance_km.toFixed(1)}</span> km<br>
+                        Consumo: <span id="totalConsumption">${d.totals.consumption_kwh.toFixed(1)}</span> kWh
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    // Crear gráficos
+    createSavingsChart();
+    createEmissionsChart();
+}
+
+function createSavingsChart() {
+    if (!currentEnergyData) return;
+    
+    const d = currentEnergyData;
+    
+    const trace1 = {
+        x: ['BYD Eléctrico', 'Gasolina', 'Diésel'],
+        y: [d.costs.electric, d.costs.gasoline, d.costs.diesel],
+        type: 'bar',
+        marker: {
+            color: ['#1e3c72', '#dc3545', '#0d6efd']
+        },
+        text: [d.costs.electric.toFixed(2) + '€', d.costs.gasoline.toFixed(2) + '€', d.costs.diesel.toFixed(2) + '€'],
+        textposition: 'auto',
+        name: 'Coste Total'
+    };
+    
+    const layout = {
+        title: 'Comparativa de Costes',
+        yaxis: { title: 'Coste (€)' },
+        showlegend: false
+    };
+    
+    Plotly.newPlot('savingsChart', [trace1], layout);
+}
+
+function createEmissionsChart() {
+    if (!currentEnergyData) return;
+    
+    const d = currentEnergyData;
+    
+    const trace1 = {
+        x: ['Gasolina', 'Diésel'],
+        y: [d.emissions.gasoline_kg, d.emissions.diesel_kg],
+        type: 'bar',
+        marker: {
+            color: ['#dc3545', '#0d6efd']
+        },
+        text: [d.emissions.gasoline_kg.toFixed(1) + ' kg', d.emissions.diesel_kg.toFixed(1) + ' kg'],
+        textposition: 'auto',
+        name: 'Emisiones CO₂'
+    };
+    
+    const layout = {
+        title: 'Emisiones CO₂ Evitadas',
+        yaxis: { title: 'CO₂ (kg)' },
+        showlegend: false
+    };
+    
+    Plotly.newPlot('emissionsChart', [trace1], layout);
+}
+
+async function calculateWithCustomValues() {
+    try {
+        // Obtener valores del formulario
+        const useAllDates = document.getElementById('useAllDates').checked;
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+        
+        const data = {
+            electricity_price: parseFloat(document.getElementById('customElectricityPrice').value),
+            gasoline_price: parseFloat(document.getElementById('customGasolinePrice').value),
+            diesel_price: parseFloat(document.getElementById('customDieselPrice').value),
+            gasoline_consumption: parseFloat(document.getElementById('customGasolineConsumption').value),
+            diesel_consumption: parseFloat(document.getElementById('customDieselConsumption').value),
+            co2_gasoline: parseFloat(document.getElementById('customCo2Gasoline').value),
+            co2_diesel: parseFloat(document.getElementById('customCo2Diesel').value),
+            date_from: useAllDates ? null : dateFrom,
+            date_to: useAllDates ? null : dateTo
+        };
+        
+        // Validar
+        for (const [key, value] of Object.entries(data)) {
+            if (key.startsWith('date_')) continue; // Ignorar fechas
+            if (isNaN(value) || value < 0) {
+                throw new Error(`Valor inválido para ${key}: ${value}`);
+            }
+        }
+        
+        // Validar fechas si se usan
+        if (!useAllDates) {
+            if (!dateFrom || !dateTo) {
+                throw new Error('Debes especificar ambas fechas');
+            }
+            if (new Date(dateFrom) > new Date(dateTo)) {
+                throw new Error('La fecha "Desde" no puede ser mayor que "Hasta"');
+            }
+        }
+        
+        // Mostrar loading
+        showToast('Calculando con valores personalizados...', 'info');
+        
+        // Llamar a la API
+        const response = await fetch('/api/energy_costs', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (!response.ok) {
+            throw new Error('Error en la API');
+        }
+        
+        currentEnergyData = await response.json();
+        customCalculation = true;
+        
+        // Actualizar UI
+        updateEnergyComparisonUI();
+        
+        // Cerrar modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('costCalculatorModal'));
+        modal.hide();
+        
+        showToast('Cálculo personalizado aplicado', 'success');
+        
+    } catch (error) {
+        console.error('Error en cálculo personalizado:', error);
+        showToast('Error: ' + error.message, 'error');
+    }
+}
+
+async function resetToDefaults() {
+    try {
+        customCalculation = false;
+        await loadEnergyComparison();
+        showToast('Valores por defecto restablecidos', 'success');
+    } catch (error) {
+        console.error('Error restableciendo valores:', error);
+        showToast('Error restableciendo valores', 'error');
+    }
+}
+
+function initializeEnergyComparison() {
+    // Cargar datos iniciales
+    loadEnergyComparison();
+    
+    // Establecer fechas por defecto (últimos 30 días)
+    const today = new Date();
+    const lastMonth = new Date();
+    lastMonth.setDate(today.getDate() - 30);
+    
+    document.getElementById('dateFrom').value = lastMonth.toISOString().split('T')[0];
+    document.getElementById('dateTo').value = today.toISOString().split('T')[0];
+    
+    // Actualizar cada 60 segundos
+    setInterval(loadEnergyComparison, 60000);
+}
+
+// ===== FUNCIONES UTILITARIAS =====
+function formatDate(date) {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+}
+
+function formatTime(date) {
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+}
+
+function getEfficiencyClass(efficiency) {
+    if (!efficiency) return 'bg-secondary';
+    if (efficiency > 6) return 'efficiency-excellent';
+    if (efficiency > 5) return 'efficiency-good';
+    if (efficiency > 0) return 'efficiency-poor';
+    return 'bg-secondary';
+}
+
+function showToast(message, type = 'info') {
+    Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: type,
+        title: message,
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true
+    });
+}
+
+// ===== FUNCIONES PARA EL MODAL DE COSTES =====
+function loadSavedCostSettings() {
+    var savedSettings = localStorage.getItem('costSettings');
+    if (savedSettings) {
+        var settings = JSON.parse(savedSettings);
+        $('#electricityPrice').val(settings.electricityPrice || 0.15);
+        $('#gasolinePrice').val(settings.gasolinePrice || 1.60);
+        $('#dieselPrice').val(settings.dieselPrice || 1.50);
+        $('#gasolineConsumption').val(settings.gasolineConsumption || 6.5);
+        $('#dieselConsumption').val(settings.dieselConsumption || 5.5);
+        $('#gasolineEmissions').val(settings.gasolineEmissions || 120);
+    }
+}
+
+// Función para mostrar alertas
+function showAlert(message, type) {
+    var alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    
+    // Insertar al principio del contenedor principal
+    $('.container').prepend(alertHtml);
+    
+    // Auto-eliminar después de 5 segundos
+    setTimeout(function() {
+        $('.alert').alert('close');
+    }, 5000);
+}
+
+// Inicializar cuando el DOM esté listo
+$(document).ready(function() {
+    console.log('Document ready');
+    
+    // Verificar que la tabla existe
+    if ($('#tripsTable').length) {
+        console.log('Tabla encontrada');
+    } else {
+        console.error('NO se encuentra #tripsTable');
+    }
+    
+    // Cargar configuración cuando se abre el modal de costes
+    $('#costModal').on('show.bs.modal', function() {
+        loadSavedCostSettings();
+    });
+    
+    // Guardar configuración de costes
+    $('#saveCostSettings').on('click', function() {
+        // Obtener valores del modal
+        var electricityPrice = parseFloat($('#electricityPrice').val());
+        var gasolinePrice = parseFloat($('#gasolinePrice').val());
+        var dieselPrice = parseFloat($('#dieselPrice').val());
+        var gasolineConsumption = parseFloat($('#gasolineConsumption').val());
+        var dieselConsumption = parseFloat($('#dieselConsumption').val());
+        var gasolineEmissions = parseFloat($('#gasolineEmissions').val());
+        
+        // Guardar en localStorage
+        localStorage.setItem('costSettings', JSON.stringify({
+            electricityPrice: electricityPrice,
+            gasolinePrice: gasolinePrice,
+            dieselPrice: dieselPrice,
+            gasolineConsumption: gasolineConsumption,
+            dieselConsumption: dieselConsumption,
+            gasolineEmissions: gasolineEmissions,
+            lastUpdated: new Date().toISOString()
+        }));
+        
+        // Cerrar modal
+        $('#costModal').modal('hide');
+        
+        // Mostrar mensaje de éxito
+        showAlert('¡Configuración guardada! Los costes se han actualizado.', 'success');
+        
+        // Opcional: Recalcular costes si ya hay datos cargados
+        if (window.updateCostCalculations) {
+            window.updateCostCalculations();
+        }
+    });
+});
+
+// ===== COMPARATIVA DE COSTES Y EMISIONES =====
+
+
+async function loadEnergyComparison() {
+    try {
+        const response = await fetch('/api/energy_costs');
+        currentEnergyData = await response.json();
+        customCalculation = currentEnergyData.custom_calculation || false;
+        updateEnergyComparisonUI();
+    } catch (error) {
+        console.error('Error cargando comparativa:', error);
+    }
+}
+
+function updateEnergyComparisonUI() {
+    if (!currentEnergyData) return;
+    
+    const d = currentEnergyData;
+    
+    // Costes
+    document.getElementById('costElectric').textContent = d.costs.electric.toFixed(2) + ' €';
+    document.getElementById('costElectricDetails').textContent = 
+        d.totals.consumption_kwh.toFixed(1) + ' kWh × ' + d.prices.electricity.toFixed(2) + ' €/kWh';
+    
+    document.getElementById('costGasoline').textContent = d.costs.gasoline.toFixed(2) + ' €';
+    document.getElementById('costGasolineDetails').textContent = 
+        d.totals.distance_km.toFixed(1) + ' km × ' + d.consumptions.gasoline_l_100km + ' L/100km';
+    
+    document.getElementById('costDiesel').textContent = d.costs.diesel.toFixed(2) + ' €';
+    document.getElementById('costDieselDetails').textContent = 
+        d.totals.distance_km.toFixed(1) + ' km × ' + d.consumptions.diesel_l_100km + ' L/100km';
+    
+    // Ahorros
+    document.getElementById('savingsGasolineAmount').textContent = d.savings.vs_gasoline.amount.toFixed(2) + ' €';
+    document.getElementById('savingsGasolinePct').textContent = d.savings.vs_gasoline.percentage.toFixed(1) + '%';
+    document.getElementById('savingsDieselAmount').textContent = d.savings.vs_diesel.amount.toFixed(2) + ' €';
+    document.getElementById('savingsDieselPct').textContent = d.savings.vs_diesel.percentage.toFixed(1) + '%';
+    
+    // Emisiones
+    document.getElementById('emissionsGasoline').textContent = d.emissions.gasoline_kg.toFixed(1) + ' kg';
+    document.getElementById('emissionsDiesel').textContent = d.emissions.diesel_kg.toFixed(1) + ' kg';
+    
+    // Configuración actual
+    document.getElementById('currentElectricityPrice').textContent = d.prices.electricity.toFixed(2);
+    document.getElementById('currentGasolinePrice').textContent = d.prices.gasoline.toFixed(2);
+    document.getElementById('currentDieselPrice').textContent = d.prices.diesel.toFixed(2);
+    document.getElementById('currentGasolineConsumption').textContent = d.consumptions.gasoline_l_100km;
+    document.getElementById('currentDieselConsumption').textContent = d.consumptions.diesel_l_100km;
+    document.getElementById('currentCo2Gasoline').textContent = d.emissions_factors.gasoline_g_km;
+    document.getElementById('currentCo2Diesel').textContent = d.emissions_factors.diesel_g_km;
+    document.getElementById('totalDistance').textContent = d.totals.distance_km.toFixed(1);
+    document.getElementById('totalConsumption').textContent = d.totals.consumption_kwh.toFixed(1);
+    
+    // Indicador de cálculo personalizado
+    const configAlert = document.querySelector('.alert.alert-info');
+    if (configAlert) {
+        if (customCalculation) {
+            configAlert.classList.remove('alert-info');
+            configAlert.classList.add('alert-warning');
+            configAlert.innerHTML = `
+                <i class="bi bi-exclamation-triangle"></i>
+                <strong>Cálculo personalizado activo</strong> - 
+                Usando valores personalizados. 
+                <button class="btn btn-sm btn-outline-secondary ms-2" onclick="resetToDefaults()">
+                    Volver a valores por defecto
+                </button>
+            `;
+        } else {
+            configAlert.classList.remove('alert-warning');
+            configAlert.classList.add('alert-info');
+            configAlert.innerHTML = `
+                <div class="row small">
+                    <div class="col-md-3">
+                        <strong>Precios actuales:</strong><br>
+                        Electricidad: <span id="currentElectricityPrice">${d.prices.electricity.toFixed(2)}</span> €/kWh<br>
+                        Gasolina: <span id="currentGasolinePrice">${d.prices.gasoline.toFixed(2)}</span> €/L<br>
+                        Diésel: <span id="currentDieselPrice">${d.prices.diesel.toFixed(2)}</span> €/L
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Consumos referencia:</strong><br>
+                        Gasolina: <span id="currentGasolineConsumption">${d.consumptions.gasoline_l_100km}</span> L/100km<br>
+                        Diésel: <span id="currentDieselConsumption">${d.consumptions.diesel_l_100km}</span> L/100km
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Emisiones referencia:</strong><br>
+                        Gasolina: <span id="currentCo2Gasoline">${d.emissions_factors.gasoline_g_km}</span> g/km<br>
+                        Diésel: <span id="currentCo2Diesel">${d.emissions_factors.diesel_g_km}</span> g/km
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Totales:</strong><br>
+                        Distancia: <span id="totalDistance">${d.totals.distance_km.toFixed(1)}</span> km<br>
+                        Consumo: <span id="totalConsumption">${d.totals.consumption_kwh.toFixed(1)}</span> kWh
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    // Crear gráficos
+    createSavingsChart();
+    createEmissionsChart();
+}
+
+function createSavingsChart() {
+    if (!currentEnergyData) return;
+    
+    const d = currentEnergyData;
+    
+    const trace1 = {
+        x: ['BYD Eléctrico', 'Gasolina', 'Diésel'],
+        y: [d.costs.electric, d.costs.gasoline, d.costs.diesel],
+        type: 'bar',
+        marker: {
+            color: ['#FFC107', '#DC3545', '#0D6EFD']
+        },
+        text: [d.costs.electric.toFixed(2) + '€', d.costs.gasoline.toFixed(2) + '€', d.costs.diesel.toFixed(2) + '€'],
+        textposition: 'auto',
+        name: 'Coste Total'
+    };
+    
+    const layout = {
+        title: 'Comparativa de Costes',
+        yaxis: { title: 'Coste (€)' },
+        showlegend: false
+    };
+    
+    Plotly.newPlot('savingsChart', [trace1], layout);
+}
+
+function createEmissionsChart() {
+    if (!currentEnergyData) return;
+    
+    const d = currentEnergyData;
+    
+    const trace1 = {
+        x: ['Gasolina', 'Diésel'],
+        y: [d.emissions.gasoline_kg, d.emissions.diesel_kg],
+        type: 'bar',
+        marker: {
+            color: ['#DC3545', '#0D6EFD']
+        },
+        text: [d.emissions.gasoline_kg.toFixed(1) + ' kg', d.emissions.diesel_kg.toFixed(1) + ' kg'],
+        textposition: 'auto',
+        name: 'Emisiones CO₂'
+    };
+    
+    const layout = {
+        title: 'Emisiones CO₂ Evitadas',
+        yaxis: { title: 'CO₂ (kg)' },
+        showlegend: false
+    };
+    
+    Plotly.newPlot('emissionsChart', [trace1], layout);
+}
+
+async function calculateWithCustomValues() {
+    try {
+        // Obtener valores del formulario
+        const useAllDates = document.getElementById('useAllDates').checked;
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+        
+        const data = {
+            electricity_price: parseFloat(document.getElementById('customElectricityPrice').value),
+            gasoline_price: parseFloat(document.getElementById('customGasolinePrice').value),
+            diesel_price: parseFloat(document.getElementById('customDieselPrice').value),
+            gasoline_consumption: parseFloat(document.getElementById('customGasolineConsumption').value),
+            diesel_consumption: parseFloat(document.getElementById('customDieselConsumption').value),
+            co2_gasoline: parseFloat(document.getElementById('customCo2Gasoline').value),
+            co2_diesel: parseFloat(document.getElementById('customCo2Diesel').value),
+            date_from: useAllDates ? null : dateFrom,
+            date_to: useAllDates ? null : dateTo
+        };
+        
+        // Validar
+        for (const [key, value] of Object.entries(data)) {
+            if (key.startsWith('date_')) continue; // Ignorar fechas
+            if (isNaN(value) || value < 0) {
+                throw new Error(`Valor inválido para ${key}: ${value}`);
+            }
+        }
+        
+        // Validar fechas si se usan
+        if (!useAllDates) {
+            if (!dateFrom || !dateTo) {
+                throw new Error('Debes especificar ambas fechas');
+            }
+            if (new Date(dateFrom) > new Date(dateTo)) {
+                throw new Error('La fecha "Desde" no puede ser mayor que "Hasta"');
+            }
+        }
+        
+        // Mostrar loading
+        showToast('Calculando con valores personalizados...', 'info');
+        
+        // Llamar a la API
+        const response = await fetch('/api/energy_costs', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (!response.ok) {
+            throw new Error('Error en la API');
+        }
+        
+        currentEnergyData = await response.json();
+        customCalculation = true;
+        
+        // Actualizar UI
+        updateEnergyComparisonUI();
+        
+        // Cerrar modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('costCalculatorModal'));
+        modal.hide();
+        
+        showToast('Cálculo personalizado aplicado', 'success');
+        
+    } catch (error) {
+        console.error('Error en cálculo personalizado:', error);
+        showToast('Error: ' + error.message, 'error');
+    }
+}
+
+async function resetToDefaults() {
+    try {
+        customCalculation = false;
+        await loadEnergyComparison();
+        showToast('Valores por defecto restablecidos', 'success');
+    } catch (error) {
+        console.error('Error restableciendo valores:', error);
+        showToast('Error restableciendo valores', 'error');
+    }
+}
+
+function initializeEnergyComparison() {
+    // Cargar datos iniciales
+    loadEnergyComparison();
+    
+    // Establecer fechas por defecto (últimos 30 días)
+    const today = new Date();
+    const lastMonth = new Date();
+    lastMonth.setDate(today.getDate() - 30);
+    
+    document.getElementById('dateFrom').value = lastMonth.toISOString().split('T')[0];
+    document.getElementById('dateTo').value = today.toISOString().split('T')[0];
+    
+    // Actualizar cada 60 segundos
+    setInterval(loadEnergyComparison, 60000);
+}
+
+// ============================================
+// FIN DEL ARCHIVO
+// ============================================
+

@@ -355,11 +355,83 @@ body {
     border-radius: var(--radius);
     font-size: 0.9rem;
     color: var(--gray-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 #filterInfo {
     font-style: italic;
     color: var(--primary-color);
+}
+
+/* Botones de cambio de tamaño de página */
+.btn-group .btn-outline-primary {
+    background-color: white;
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    font-weight: 600;
+    padding: 6px 14px;
+    transition: all 0.3s ease;
+    min-width: 45px;
+}
+
+.btn-group .btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(30, 60, 114, 0.2);
+}
+
+.btn-group .btn-outline-primary:active,
+.btn-group .btn-outline-primary.active {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 2px 4px rgba(30, 60, 114, 0.3) !important;
+}
+
+/* Botón "Todos" con estilo especial */
+.btn-group .btn-byd {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border: none;
+    color: white !important;
+    font-weight: 600;
+    padding: 6px 14px;
+    transition: all 0.3s ease;
+    min-width: 60px;
+}
+
+.btn-group .btn-byd:hover {
+    background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(30, 60, 114, 0.4);
+}
+
+.btn-group .btn-byd:active {
+    transform: translateY(0);
+}
+
+/* Espaciado entre botones */
+.btn-group .btn {
+    margin: 0 2px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .page-size-controls {
+        font-size: 0.85rem;
+        padding: 0.5rem;
+    }
+    
+    .btn-group .btn-outline-primary,
+    .btn-group .btn-byd {
+        padding: 5px 10px;
+        font-size: 0.85rem;
+        min-width: 40px;
+    }
 }
 
 /* ============================================
@@ -608,3 +680,401 @@ footer p {
         font-size: 0.9rem;
     }
 }
+
+/* ===== COMPARATIVA DE COSTES Y EMISIONES ===== */
+
+/* Badges de ahorros */
+.savings-badge {
+    padding: 15px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: bold;
+    transition: transform 0.3s ease;
+}
+
+.savings-badge:hover {
+    transform: translateY(-5px);
+}
+
+.savings-badge.savings-gasoline {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.savings-badge.savings-diesel {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.savings-badge i {
+    font-size: 1.5rem;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.savings-badge span {
+    display: block;
+    font-size: 1.8rem;
+    margin: 10px 0;
+    font-weight: 700;
+}
+
+.savings-badge .small {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-top: 5px;
+}
+
+/* Badges de emisiones */
+.emissions-badge {
+    padding: 15px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    color: #333;
+    font-weight: bold;
+    transition: transform 0.3s ease;
+}
+
+.emissions-badge:hover {
+    transform: translateY(-5px);
+}
+
+.emissions-badge.emissions-gasoline {
+    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+}
+
+.emissions-badge.emissions-diesel {
+    background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+}
+
+.emissions-badge i {
+    font-size: 1.5rem;
+    color: #28a745;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.emissions-badge span {
+    display: block;
+    font-size: 1.5rem;
+    margin: 10px 0;
+    font-weight: 700;
+}
+
+.emissions-badge .small {
+    font-size: 0.9rem;
+    margin-top: 5px;
+}
+
+/* Contenedores de gráficos */
+.chart-container {
+    min-height: 300px;
+    padding: 10px;
+    position: relative;
+}
+
+/* Ajustes para el modal de calculadora */
+#costCalculatorModal .modal-dialog {
+    max-width: 900px;
+}
+
+#costCalculatorModal .form-control,
+#costCalculatorModal .input-group {
+    margin-bottom: 0;
+}
+
+#costCalculatorModal .form-text {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-top: 4px;
+}
+
+#costCalculatorModal .input-group-text {
+    background-color: #f8f9fa;
+    font-weight: 500;
+    border-left: none;
+}
+
+#costCalculatorModal input[type="number"] {
+    border-right: none;
+}
+
+#costCalculatorModal input[type="date"] {
+    font-size: 0.9rem;
+}
+
+#costCalculatorModal h6 {
+    color: #1e3c72;
+    font-weight: 600;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #f0f2f5;
+}
+
+/* Tarjetas de costes */
+.card.bg-light {
+    border: 1px solid #e0e0e0;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.card.bg-light:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-3px);
+}
+
+.card.bg-light h6 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #495057;
+}
+
+.card.bg-light h3 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 10px 0;
+    color: #1e3c72;
+}
+
+.card.bg-light .text-muted {
+    font-size: 0.8rem;
+}
+
+/* Alert personalizado */
+.alert.alert-warning {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
+    border-color: #ffc107;
+    color: #856404;
+}
+
+.alert.alert-warning .btn-outline-secondary {
+    border-color: #856404;
+    color: #856404;
+    font-size: 0.85rem;
+    padding: 4px 10px;
+}
+
+.alert.alert-warning .btn-outline-secondary:hover {
+    background-color: #856404;
+    color: white;
+}
+
+/* Iconos en headers */
+.card-header h5 i,
+.card-header h6 i {
+    color: #1e3c72;
+    margin-right: 8px;
+}
+
+/* Botón flotante de personalización */
+.float-end {
+    margin-top: -5px;
+}
+
+/* Botón Personalizar Cálculo */
+.card-header .btn-outline-primary {
+    background-color: white;
+    border: 2px solid white;
+    color: var(--primary-color);
+    font-weight: 600;
+    padding: 6px 16px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.card-header .btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    border-color: white;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(30, 60, 114, 0.3);
+}
+
+.card-header .btn-outline-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+.card-header .btn-outline-primary i {
+    margin-right: 6px;
+    color: inherit;
+}
+
+/* Responsive - Móviles */
+@media (max-width: 768px) {
+    .savings-badge span,
+    .emissions-badge span {
+        font-size: 1.4rem;
+    }
+    
+    .card.bg-light h3 {
+        font-size: 1.5rem;
+    }
+    
+    .chart-container {
+        min-height: 250px;
+    }
+    
+    #costCalculatorModal .modal-dialog {
+        max-width: 95%;
+        margin: 10px auto;
+    }
+    
+    .alert .row.small {
+        font-size: 0.75rem;
+    }
+    
+    .alert .row.small .col-md-3 {
+        margin-bottom: 10px;
+    }
+}
+
+/* Animaciones suaves */
+.card {
+    transition: all 0.3s ease;
+}
+
+.badge {
+    transition: all 0.2s ease;
+}
+
+.badge:hover {
+    transform: scale(1.05);
+}
+
+/* Mejora visual de inputs en el modal */
+#costCalculatorModal input[type="number"]:focus,
+#costCalculatorModal input[type="date"]:focus {
+    border-color: #1e3c72;
+    box-shadow: 0 0 0 0.2rem rgba(30, 60, 114, 0.25);
+}
+
+/* Checkbox personalizado */
+#costCalculatorModal .form-check-input:checked {
+    background-color: #1e3c72;
+    border-color: #1e3c72;
+}
+
+#costCalculatorModal .form-check-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+/* ============================================
+   DATATABLES - AJUSTE DE COLOR CORPORATIVO
+   ============================================ */
+
+/* Botones de paginación - solo cambio de color */
+.dataTables_paginate .paginate_button {
+    color: var(--primary-color) !important;
+}
+
+.dataTables_paginate .paginate_button:hover {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: white !important;
+}
+
+.dataTables_paginate .paginate_button.current {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: white !important;
+}
+
+.dataTables_paginate .paginate_button.current:hover {
+    background-color: var(--secondary-color) !important;
+    border-color: var(--secondary-color) !important;
+}
+
+/* Texto "Mostrando X a Y de Z" */
+.dataTables_info {
+    color: var(--gray-color) !important;
+}
+
+/* ============================================
+   ESTILOS ESPECÍFICOS PARA GRÁFICOS COMPARATIVOS
+   ============================================ */
+
+/* Contenedor de gráficos comparativos */
+#savingsChart, #emissionsChart {
+    min-height: 320px !important;
+    width: 100% !important;
+}
+
+/* Forzar igualdad de tamaños en Plotly */
+.js-plotly-plot {
+    width: 100% !important;
+    height: 320px !important;
+}
+
+/* Contenedor de la fila de comparación */
+#consumption .row:has(#savingsChart) {
+    display: flex;
+    align-items: stretch; /* ← Esto hace que ambas tarjetas tengan igual altura */
+}
+
+/* Tarjetas individuales de gráficos */
+#consumption .row:has(#savingsChart) .card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+#consumption .row:has(#savingsChart) .card-body {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Asegurar que los gráficos ocupen espacio disponible */
+#savingsChart, #emissionsChart {
+    flex-grow: 1;
+}
+
+/* Badges de ahorro - ESTILOS EXISTENTES PERO CON COLORES CORPORATIVOS */
+.savings-badge.savings-gasoline {
+    background: linear-gradient(135deg, #dc3545, #c82333) !important; /* ← Color gasolina */
+}
+
+.savings-badge.savings-diesel {
+    background: linear-gradient(135deg, #0d6efd, #0b5ed7) !important; /* ← Color diésel */
+}
+
+/* Badges de emisiones - ESTILOS EXISTENTES PERO CON COLORES CORPORATIVOS */
+.emissions-badge.emissions-gasoline {
+    background: linear-gradient(135deg, #dc3545, #c82333) !important;
+    color: white !important;
+}
+
+.emissions-badge.emissions-diesel {
+    background: linear-gradient(135deg, #0d6efd, #0b5ed7) !important;
+    color: white !important;
+}
+
+.emissions-badge i {
+    color: white !important; /* ← Iconos blancos sobre fondo corporativo */
+}
+
+/* Asegurar que los badges sean iguales */
+.savings-badge, .emissions-badge {
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Responsive para móviles */
+@media (max-width: 768px) {
+    #consumption .row:has(#savingsChart) {
+        flex-direction: column;
+    }
+    
+    #savingsChart, #emissionsChart {
+        min-height: 280px !important;
+    }
+    
+    .js-plotly-plot {
+        height: 280px !important;
+    }
+}
+
