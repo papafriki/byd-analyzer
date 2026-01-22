@@ -1,4 +1,4 @@
-# ⚡ BYD Energy Analyzer v1.0
+# ⚡ BYD Energy Analyzer v1.1
 
 [![Docker](https://img.shields.io/badge/Docker-✓-blue)](https://www.docker.com/)
 [![Python](https://img.shields.io/badge/Python-3.9+-green)](https://python.org)
@@ -67,6 +67,50 @@ docker-compose up -d
 Abre tu navegador en: http://localhost:5005
 
 
+## 🔄 Actualización
+
+Cuando se publique una nueva versión con mejoras o correcciones sigue estos pasos para actualizar tu instalación.
+
+### Método 1: Usando el script de actualización (Recomendado)
+
+El repositorio incluye un script que automatiza todo el proceso:
+
+```bash
+# 1. Asegúrate de estar en el directorio del proyecto
+cd ~/byd-analyzer  # o tu ruta personalizada
+
+# 2. Dale permisos de ejecución (solo la primera vez)
+chmod +x update.sh
+
+# 3. Ejecuta el script
+./update.sh
+```
+### Método 2: Actualización manual
+
+Si prefieres hacerlo paso a paso:
+
+```bash
+# 1. Navegar al directorio del proyecto
+cd /ruta/a/tu/byd-analyzer
+
+# 2. Detener los contenedores actuales
+docker-compose down
+
+# 3. (Opcional pero recomendado) Hacer backup manual de los datos
+cp data/historical.db data/historical.db.backup_$(date +%Y%m%d_%H%M%S)
+
+# 4. Obtener la última versión del código
+git pull origin main
+
+# 5. Reconstruir la imagen Docker
+docker-compose build --no-cache
+
+# 6. Volver a iniciar
+docker-compose up -d
+
+# 7. Verificar
+docker-compose logs -f
+```
 ### Estructura del proyecto
 ```bash
 byd-analyzer/
