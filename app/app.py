@@ -12,11 +12,11 @@ app = Flask(__name__)
 CORS(app)
 
 # Configuración
-app.config['UPLOAD_FOLDER'] = 'subir_fichero'
+app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 # Crear directorios si no existen
-for folder in ['data', 'subir_fichero', 'templates', 'static']:
+for folder in ['data', 'uploads', 'templates', 'static']:
     os.makedirs(folder, exist_ok=True)
 
 # ========== FUNCIONES DE BASE DE DATOS ==========
@@ -1102,7 +1102,7 @@ def api_system_status():
 
 if __name__ == '__main__':
     print("=" * 50)
-    print("🚀 Iniciando BYD Analyzer v1.0...")
+    print("🚀 Iniciando BYD Analyzer v1.1...")
     print("=" * 50)
     
     init_database()
@@ -1110,7 +1110,7 @@ if __name__ == '__main__':
     print("✅ Base de datos inicializada")
     print("📊 Directorios verificados:")
     print(f"   - data/: {os.path.exists('data')}")
-    print(f"   - subir_fichero/: {os.path.exists('subir_fichero')}")
+    print(f"   - uploads/: {os.path.exists('uploads')}")
     print(f"   - templates/: {os.path.exists('templates')}")
     print(f" Zona horaria configurada: Europe/Madrid (UTC+1/UTC+2 automático)")
     

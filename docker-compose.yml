@@ -9,7 +9,7 @@ services:
       - FLASK_ENV=production
     volumes:
       - ./data:/app/data:rw
-      - ./uploads:/app/subir_fichero:rw
+      - ./uploads:/app/uploads:rw
       - ./app/templates:/app/templates
       - ./app/static:/app/static
     restart: unless-stopped

@@ -17,8 +17,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app/ /app/
 
 # Crear SOLO los directorios necesarios
-RUN mkdir -p /app/data /app/subir_fichero \
-    && chmod -R 755 /app/data /app/subir_fichero
+RUN mkdir -p /app/data /app/uploads \
+    && chmod -R 755 /app/data /app/uploads
 
 # Crear usuario no-root
 RUN useradd -m -u 1000 byduser \
